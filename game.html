@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charger Chase</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            background: lightgray;
+            display: block;
+            margin: auto;
+        }
+
+        .game-over {
+            font-size: 30px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Charger Chase</h1>
+    <canvas id="gameCanvas" width="600" height="300"></canvas>
+    <p id="gameOver" class="game-over" style="display: none;">YOU DON'T GET THE CHARGER!</p>
+    <script>const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const player = { x: 280, y: 250, width: 40, height: 40, color: "red" };
+        const charger = { x: Math.random() * 560, y: 50, width: 20, height: 20, color: "yellow" };
+        const obstacles = [];
+        let score = 0;
+        let gameOver = false;
+
+        // Create random obstacles
+        function createObstacle() {
+            const obstacle = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                width: 30,
+                height: 30,
+                color: "black"
+            };
+            obstacles.push(obstacle);
+        }
+
+        // Set a timer to create obstacles every 2 seconds
+        setInterval(createObstacle, 2000);
+
+        const keys = {};
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        function update() {
+            if (gameOver) return;
+
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 5;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += 5;
+            if (keys['ArrowUp'] && player.y > 0) player.y -= 5;
+            if (keys['ArrowDown'] && player.y < canvas.height - player.height) player.y += 5;
+
+            // Check for collisions with the charger
+            if (
+                player.x < charger.x + charger.width &&
+                player.x + player.width > charger.x &&
+                player.y < charger.y + charger.height &&
+                player.y + player.height > charger.y
+            ) {
+                score++;
+                charger.x = Math.random() * 560;
+                charger.y = Math.random() * 150;
+            }
+
+            // Check for collisions with obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+                if (
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y
+                ) {
+                    gameOver = true;
+                    document.getElementById("gameOver").style.display = "block";
+                }
+            }
+        }
+
+        function draw() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Draw charger
+            ctx.fillStyle = charger.color;
+            ctx.fillRect(charger.x, charger.y, charger.width, charger.height);
+
+            // Draw obstacles
+            ctx.fillStyle = "black";
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            }
+
+            // Display score
+            ctx.fillStyle = "black";
+            ctx.fillText(`Score: ${score}`, 20, 20);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();</script>
+</body>
+</html>
